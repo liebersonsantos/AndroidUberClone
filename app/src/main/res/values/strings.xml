@@ -3,4 +3,5 @@
     <string name="text_uber_main">U B E R</string>
     <string name="sign_in_main">SIGN IN</string>
     <string name="register_main">REGISTER</string>
+    <string name="title_activity_welcome">Map</string>
 </resources>

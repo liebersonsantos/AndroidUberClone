@@ -24,6 +24,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.rengwuxian.materialedittext.MaterialEditText;
 
+import dmax.dialog.SpotsDialog;
 import uk.co.chrisjenx.calligraphy.CalligraphyConfig;
 import uk.co.chrisjenx.calligraphy.CalligraphyContextWrapper;
 
@@ -34,6 +35,7 @@ public class MainActivity extends AppCompatActivity {
     private FirebaseDatabase database;
     private DatabaseReference users;
     private RelativeLayout rootLayout;
+    private android.app.AlertDialog waitingDialog;
 
 
     @Override
@@ -50,11 +52,12 @@ public class MainActivity extends AppCompatActivity {
                                         .build());
         setContentView(R.layout.activity_main);
 
-        initViews();
-
+        //init firebase
         auth = FirebaseAuth.getInstance();
         database = FirebaseDatabase.getInstance();
         users = database.getReference("Users");
+
+        initViews();
 
         //Event
         btnRegister.setOnClickListener(new View.OnClickListener() {
@@ -73,12 +76,6 @@ public class MainActivity extends AppCompatActivity {
                 showLoginDialog();
             }
         });
-
-
-
-
-
-
 
     }
 
@@ -100,8 +97,9 @@ public class MainActivity extends AppCompatActivity {
         dialog.setPositiveButton("SING IN", new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int which) {
-
                         dialog.dismiss();
+                        //set disable button signIn if processing
+                        btnSignIn.setEnabled(false);
 
                         //Validation
                         if (TextUtils.isEmpty(editEmail.getText().toString())) {
@@ -122,11 +120,14 @@ public class MainActivity extends AppCompatActivity {
                             return;
                         }
 
+                        showWaitingDialog();
+
                         //Login
                         auth.signInWithEmailAndPassword(editEmail.getText().toString(), editPassword.getText().toString())
                                 .addOnSuccessListener(new OnSuccessListener<AuthResult>() {
                                     @Override
                                     public void onSuccess(AuthResult authResult) {
+                                        dismissWaitingDialog();
 
                                         startActivity(new Intent(MainActivity.this, Welcome.class));
                                         finish();
@@ -135,8 +136,10 @@ public class MainActivity extends AppCompatActivity {
                         .addOnFailureListener(new OnFailureListener() {
                             @Override
                             public void onFailure(@NonNull Exception e) {
-
+                                dismissWaitingDialog();
                                 Snackbar.make(rootLayout, "Failed " + e.getMessage(), Snackbar.LENGTH_SHORT).show();
+                                //active button
+                                btnSignIn.setEnabled(true);
                             }
                         });
                     }
@@ -151,7 +154,6 @@ public class MainActivity extends AppCompatActivity {
         });
 
         dialog.show();
-
 
     }
 
@@ -175,7 +177,6 @@ public class MainActivity extends AppCompatActivity {
         dialog.setPositiveButton("REGISTER", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-
                 dialog.dismiss();
 
                 //Validation
@@ -250,7 +251,6 @@ public class MainActivity extends AppCompatActivity {
         dialog.setNegativeButton("CANCEL", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-
                 dialog.dismiss();
             }
         });
@@ -265,4 +265,14 @@ public class MainActivity extends AppCompatActivity {
         btnRegister = findViewById(R.id.btnRegister);
         rootLayout = findViewById(R.id.rootLayout);
     }
+
+    private void showWaitingDialog() {
+        waitingDialog = new SpotsDialog.Builder().setContext(MainActivity.this).build();
+        waitingDialog.show();
+    }
+
+    private void dismissWaitingDialog() {
+        waitingDialog.dismiss();
+    }
+
 }
